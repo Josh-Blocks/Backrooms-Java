@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "joshsblocks_backrooms",
+	"version": "${version}",
+
+	"name": "Josh's Blocks: Backrooms",
+	"description": "Place the trigger block and you're somewhere else — an original, free-forever backrooms dimension. Survive the hum and find your way back.",
+	"authors": [
+		"Josh's Blocks"
+	],
+	"contact": {},
+
+	"license": "MIT",
+
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.joshsblocks.backrooms.BackroomsMod"
+		],
+		"client": [
+			"com.joshsblocks.backrooms.client.BackroomsClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

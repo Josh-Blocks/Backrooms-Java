@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "joshsblocks_backrooms:block/damp_carpet"
+  }
+}

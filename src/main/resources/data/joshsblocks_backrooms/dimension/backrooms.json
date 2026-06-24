@@ -1,0 +1,10 @@
+{
+	"type": "joshsblocks_backrooms:backrooms",
+	"generator": {
+		"type": "joshsblocks_backrooms:backrooms",
+		"biome_source": {
+			"type": "minecraft:fixed",
+			"biome": "joshsblocks_backrooms:backrooms"
+		}
+	}
+}

@@ -1,0 +1,57 @@
+plugins {
+	// 1.21.11 ships non-obfuscated; the '-remap' variant is the one that remaps
+	// against official Mojang mappings. The plain 'fabric-loom' plugin is for the
+	// 26.x non-obfuscated workflow and rejects any mappings declaration.
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	// Add additional repositories here. Vanilla Minecraft, Yarn, Loader and the
+	// Fabric API all resolve from repositories Loom configures for us.
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	// Minecraft 1.21.11 ships non-obfuscated, so Loom forbids layering Yarn on
+	// top — official Mojang mappings are mandatory here (this is what Fabric's
+	// own 1.21.11 template uses). Deliberate override of the portfolio Yarn
+	// default; the toolchain leaves no choice on this MC version.
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	// Minecraft 1.21.11 ships on Java 21.
+	it.options.release = 21
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+	from("LICENSE") {
+		rename { "${it}_${project.base.archivesName.get()}" }
+	}
+}
