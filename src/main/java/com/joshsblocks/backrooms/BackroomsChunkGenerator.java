@@ -48,8 +48,9 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 	// wall, a 2-wide doorway, or fully open — the "open" ones merge neighbouring
 	// rooms into bigger, irregular halls. Lattice intersections stay as solid
 	// support pillars (the classic backrooms columns).
-	private static final int ROOM_SIZE = 7;
-	private static final int CELL = ROOM_SIZE + 1; // pitch = 8
+	private static final int CELL = 16;            // room pitch — medium halls (merges still form bigger ones)
+	private static final int ROOM_SIZE = CELL - 1; // interior span between major walls
+	private static final int PILLAR_GRID = 8;      // support columns every 8 blocks throughout
 	private static final int DIR_WEST = 1;
 	private static final int DIR_NORTH = 2;
 	private static final int DIR_LIGHT = 3;
@@ -80,14 +81,16 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 	 * so the maze is identical from any chunk and seamless across borders.
 	 */
 	private static boolean isWall(int worldX, int worldZ) {
+		// Support columns on a fixed 8-block grid throughout — the classic backrooms
+		// pillars, and they keep the big halls from feeling like empty warehouses.
+		if (Math.floorMod(worldX, PILLAR_GRID) == 0 && Math.floorMod(worldZ, PILLAR_GRID) == 0) {
+			return true;
+		}
+
 		int lx = Math.floorMod(worldX, CELL);
 		int lz = Math.floorMod(worldZ, CELL);
-
 		if (lx != 0 && lz != 0) {
-			return false; // inside a room
-		}
-		if (lx == 0 && lz == 0) {
-			return true;  // support pillar at every lattice intersection
+			return false; // open room interior
 		}
 
 		int cellX = Math.floorDiv(worldX, CELL);
@@ -101,25 +104,25 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 
 		int state = wallState(h);
 		if (state == WALL_OPEN) {
-			return false; // merged with the neighbouring room
+			return false; // merged with the neighbouring room into a bigger hall
 		}
 		if (state == WALL_FULL) {
 			return true;
 		}
-		int doorPos = 1 + (int) ((h >>> 8) % (ROOM_SIZE - 1)); // 1..ROOM_SIZE-1
-		return !(along == doorPos || along == doorPos + 1);    // 2-wide gap
+		int doorPos = 1 + (int) ((h >>> 8) % (ROOM_SIZE - 2));
+		return !(along >= doorPos && along <= doorPos + 2); // 3-wide doorway
 	}
 
 	/** Full wall / doorway / open, weighted so there are plenty of merges and few dead solid walls. */
 	private static int wallState(long h) {
 		int r = (int) (h & 0xFFL);
-		if (r < 95) {
-			return WALL_OPEN;  // ~37% — merge rooms into bigger halls
+		if (r < 150) {
+			return WALL_OPEN;  // ~59% — merge rooms into big halls
 		}
-		if (r < 224) {
-			return WALL_DOOR;  // ~50% — a doorway
+		if (r < 236) {
+			return WALL_DOOR;  // ~34% — a doorway
 		}
-		return WALL_FULL;      // ~13% — solid
+		return WALL_FULL;      // ~7% — solid
 	}
 
 	/** Deterministic 64-bit hash (fmix-style) of a room edge. No world seed: the maze is fixed. */
