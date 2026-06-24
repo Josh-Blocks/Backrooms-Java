@@ -63,9 +63,12 @@ public final class BackroomsDimensions {
 
 			// Headless entity check: spawn a Lurker and confirm the type is registered
 			// and constructs (attributes, AI). No client needed.
-			LurkerEntity test = ModEntities.LURKER.spawn(level, new BlockPos(2, 1, 2),
-					net.minecraft.world.entity.EntitySpawnReason.MOB_SUMMONED);
-			BackroomsMod.LOGGER.info("[probe] test Lurker spawned ok: {}", test != null);
+			var reason = net.minecraft.world.entity.EntitySpawnReason.MOB_SUMMONED;
+			BackroomsMod.LOGGER.info("[probe] creatures spawn ok -> lurker={}, quiet={}, gloam={}, stillOne={}",
+					ModEntities.LURKER.spawn(level, new BlockPos(2, 1, 2), reason) != null,
+					ModEntities.QUIET.spawn(level, new BlockPos(3, 1, 2), reason) != null,
+					ModEntities.GLOAM.spawn(level, new BlockPos(4, 1, 2), reason) != null,
+					ModEntities.STILL_ONE.spawn(level, new BlockPos(5, 1, 2), reason) != null);
 		});
 	}
 }

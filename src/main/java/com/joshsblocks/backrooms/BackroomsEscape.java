@@ -102,7 +102,7 @@ public final class BackroomsEscape {
 			return;
 		}
 
-		maybeSpawnLurker(backrooms, now);
+		maybeSpawnCreature(backrooms, now);
 
 		// Snapshot the player list: escape() teleports players out of this dimension,
 		// which mutates the live players() list mid-iteration — iterating it directly
@@ -131,8 +131,8 @@ public final class BackroomsEscape {
 		});
 	}
 
-	/** Every few seconds, let a Lurker creep in near a player who hasn't got too many around already. */
-	private static void maybeSpawnLurker(ServerLevel level, long now) {
+	/** Every few seconds, let one of the four creatures (picked at random) creep in near a player. */
+	private static void maybeSpawnCreature(ServerLevel level, long now) {
 		if (now % 100L != 0L) {
 			return; // ~once every 5 seconds
 		}
@@ -142,18 +142,28 @@ public final class BackroomsEscape {
 		}
 		net.minecraft.util.RandomSource rng = level.getRandom();
 		ServerPlayer target = players.get(rng.nextInt(players.size()));
-		int nearby = level.getEntitiesOfClass(LurkerEntity.class, target.getBoundingBox().inflate(48.0)).size();
-		if (nearby >= 2) {
+		int nearby = level.getEntitiesOfClass(net.minecraft.world.entity.monster.Monster.class,
+				target.getBoundingBox().inflate(48.0)).size();
+		if (nearby >= 3) {
 			return; // don't swarm
 		}
-		int dx = (8 + rng.nextInt(12)) * (rng.nextBoolean() ? 1 : -1);
-		int dz = (8 + rng.nextInt(12)) * (rng.nextBoolean() ? 1 : -1);
+		int dx = (8 + rng.nextInt(14)) * (rng.nextBoolean() ? 1 : -1);
+		int dz = (8 + rng.nextInt(14)) * (rng.nextBoolean() ? 1 : -1);
 		net.minecraft.core.BlockPos spawnPos = new net.minecraft.core.BlockPos(
 				target.getBlockX() + dx, 1, target.getBlockZ() + dz);
-		LurkerEntity lurker = ModEntities.LURKER.spawn(level, spawnPos,
+
+		net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.monster.Monster> type =
+				switch (rng.nextInt(4)) {
+					case 0 -> ModEntities.QUIET;
+					case 1 -> ModEntities.GLOAM;
+					case 2 -> ModEntities.STILL_ONE;
+					default -> ModEntities.LURKER;
+				};
+		net.minecraft.world.entity.monster.Monster spawned = type.spawn(level, spawnPos,
 				net.minecraft.world.entity.EntitySpawnReason.MOB_SUMMONED);
-		if (lurker != null) {
-			BackroomsMod.LOGGER.info("[lurker] crept in near {} at {}", target.getName().getString(), spawnPos);
+		if (spawned != null) {
+			BackroomsMod.LOGGER.info("[creature] {} appeared near {}",
+					type.toString(), target.getName().getString());
 		}
 	}
 

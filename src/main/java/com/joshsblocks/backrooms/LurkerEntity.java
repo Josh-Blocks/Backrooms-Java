@@ -26,10 +26,10 @@ public class LurkerEntity extends Monster {
 
 	public static AttributeSupplier.Builder createAttributes() {
 		return Monster.createMonsterAttributes()
-				.add(Attributes.MAX_HEALTH, 24.0)
-				.add(Attributes.MOVEMENT_SPEED, 0.28)
-				.add(Attributes.ATTACK_DAMAGE, 4.0)
-				.add(Attributes.FOLLOW_RANGE, 28.0);
+				.add(Attributes.MAX_HEALTH, 26.0)
+				.add(Attributes.MOVEMENT_SPEED, 0.34)
+				.add(Attributes.ATTACK_DAMAGE, 5.0)
+				.add(Attributes.FOLLOW_RANGE, 40.0);
 	}
 
 	@Override

@@ -5,6 +5,9 @@
   "block.joshsblocks_backrooms.fluorescent_light": "Fluorescent Light",
   "block.joshsblocks_backrooms.trigger_block": "Backrooms Trigger",
   "entity.joshsblocks_backrooms.lurker": "The Pale Lurker",
+  "entity.joshsblocks_backrooms.quiet": "The Quiet",
+  "entity.joshsblocks_backrooms.gloam": "Gloam",
+  "entity.joshsblocks_backrooms.still_one": "The Still One",
   "subtitles.joshsblocks_backrooms.hum": "Fluorescent lights hum",
   "itemGroup.joshsblocks_backrooms.general": "Josh's Blocks: Backrooms"
 }
