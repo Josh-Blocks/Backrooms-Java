@@ -50,11 +50,11 @@ public final class BackroomsDimensions {
 
 			// Render head-height (y=2) as a top-down map: '#' = wall, '.' = walkable.
 			// Lets us confirm the maze has rooms + doorways without a player.
-			BackroomsMod.LOGGER.info("[probe] maze @ y=2 (x: -3..18, z: -3..18), '#'=wall '.'=floor:");
+			BackroomsMod.LOGGER.info("[probe] maze @ y=2 (x: -4..28, z: -4..28), '#'=wall '.'=floor:");
 			BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
-			for (int z = -3; z <= 18; z++) {
+			for (int z = -4; z <= 28; z++) {
 				StringBuilder row = new StringBuilder();
-				for (int x = -3; x <= 18; x++) {
+				for (int x = -4; x <= 28; x++) {
 					boolean solid = !level.getBlockState(p.set(x, 2, z)).isAir();
 					row.append(solid ? '#' : '.');
 				}

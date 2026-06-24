@@ -3,6 +3,7 @@
 		"minecraft:visual/fog_color": "#b3a64a",
 		"minecraft:visual/sky_color": "#2b2916",
 		"minecraft:audio/ambient_sounds": {
+			"loop": "joshsblocks_backrooms:ambient.hum",
 			"mood": {
 				"sound": "minecraft:ambient.cave",
 				"tick_delay": 4800,

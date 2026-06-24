@@ -26,10 +26,13 @@ public class BackroomsMod implements ModInitializer {
 
 		// Order matters: blocks must register before the creative tab (whose icon
 		// references a block) and before the dimension generator (which places them).
+		ModSounds.init();
 		ModBlocks.init();
 		ModEntities.init();
 		BackroomsDimensions.register();
 		BackroomsEscape.register();
+		BackroomsStability.register();
+		BackroomsRules.register();
 		ModItemGroups.init();
 	}
 }

@@ -42,14 +42,27 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 	private static final int HEIGHT = 16;
 	private static final int FLOOR_Y = 0;
 	private static final int CEILING_Y = 5;        // walkable interior is y = 1..4
-	private static final int LIGHT_SPACING = 7;    // fluorescent panel lattice in the ceiling
 
-	// Maze layout: a lattice of ROOM_SIZE x ROOM_SIZE rooms separated by 1-block
-	// walls, with hashed doorways punched through so the space is navigable.
-	private static final int ROOM_SIZE = 4;
-	private static final int CELL = ROOM_SIZE + 1; // wall pitch (wall occupies local index 0)
+	// Maze layout: a lattice of ROOM_SIZE x ROOM_SIZE rooms on a CELL-block pitch
+	// (the wall sits on local index 0). Each room edge is independently a full
+	// wall, a 2-wide doorway, or fully open — the "open" ones merge neighbouring
+	// rooms into bigger, irregular halls. Lattice intersections stay as solid
+	// support pillars (the classic backrooms columns).
+	private static final int ROOM_SIZE = 7;
+	private static final int CELL = ROOM_SIZE + 1; // pitch = 8
 	private static final int DIR_WEST = 1;
 	private static final int DIR_NORTH = 2;
+	private static final int DIR_LIGHT = 3;
+
+	// Ceiling lights sit on a 4-block grid (offset into rooms); roughly a quarter
+	// are "blown" to leave unsettling dark patches.
+	private static final int LIGHT_GRID = 4;
+	private static final int LIGHT_OFFSET = 2;
+
+	// Wall-edge states.
+	private static final int WALL_FULL = 0;
+	private static final int WALL_DOOR = 1;
+	private static final int WALL_OPEN = 2;
 
 	public BackroomsChunkGenerator(BiomeSource biomeSource) {
 		super(biomeSource);
@@ -61,41 +74,52 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 	}
 
 	/**
-	 * True where a maze wall column should stand. The world is a grid of rooms; a
-	 * column is wall if it lies on a grid line, unless that part of the wall is a
-	 * hashed doorway. Every value is a pure function of world coordinates, so the
-	 * maze is identical no matter which chunk asks and seamless across borders.
+	 * True where a solid wall or pillar column should stand. Lattice intersections
+	 * are always pillars; each room edge is independently a full wall, a 2-wide
+	 * doorway, or fully open (merging the two rooms). Pure function of world coords,
+	 * so the maze is identical from any chunk and seamless across borders.
 	 */
 	private static boolean isWall(int worldX, int worldZ) {
 		int lx = Math.floorMod(worldX, CELL);
 		int lz = Math.floorMod(worldZ, CELL);
 
-		// Inside a room — never a wall.
 		if (lx != 0 && lz != 0) {
-			return false;
+			return false; // inside a room
 		}
-		// Grid-line intersections are always solid corner posts.
 		if (lx == 0 && lz == 0) {
-			return true;
+			return true;  // support pillar at every lattice intersection
 		}
 
 		int cellX = Math.floorDiv(worldX, CELL);
 		int cellZ = Math.floorDiv(worldZ, CELL);
 
-		if (lx == 0) {
-			// Vertical wall = the west edge of the room to the east; doorway runs along lz.
-			return !isDoorway(cellX, cellZ, DIR_WEST, lz);
+		// A vertical line (lx==0) is the west edge of the cell to its east; a
+		// horizontal line (lz==0) is the north edge of the cell to its south.
+		int dir = (lx == 0) ? DIR_WEST : DIR_NORTH;
+		int along = (lx == 0) ? lz : lx; // position along the wall, 1..ROOM_SIZE
+		long h = hash(cellX, cellZ, dir);
+
+		int state = wallState(h);
+		if (state == WALL_OPEN) {
+			return false; // merged with the neighbouring room
 		}
-		// Horizontal wall = the north edge of the room to the south; doorway runs along lx.
-		return !isDoorway(cellX, cellZ, DIR_NORTH, lx);
+		if (state == WALL_FULL) {
+			return true;
+		}
+		int doorPos = 1 + (int) ((h >>> 8) % (ROOM_SIZE - 1)); // 1..ROOM_SIZE-1
+		return !(along == doorPos || along == doorPos + 1);    // 2-wide gap
 	}
 
-	/** Whether the wall segment for this room edge has its (single) doorway at this offset. */
-	private static boolean isDoorway(int cellX, int cellZ, int dir, int offset) {
-		long h = hash(cellX, cellZ, dir);
-		boolean hasDoor = (h & 0xFFL) < 200L;       // ~78% of walls have a doorway
-		int doorPos = 1 + (int) ((h >>> 8) % ROOM_SIZE); // 1..ROOM_SIZE
-		return hasDoor && offset == doorPos;
+	/** Full wall / doorway / open, weighted so there are plenty of merges and few dead solid walls. */
+	private static int wallState(long h) {
+		int r = (int) (h & 0xFFL);
+		if (r < 95) {
+			return WALL_OPEN;  // ~37% — merge rooms into bigger halls
+		}
+		if (r < 224) {
+			return WALL_DOOR;  // ~50% — a doorway
+		}
+		return WALL_FULL;      // ~13% — solid
 	}
 
 	/** Deterministic 64-bit hash (fmix-style) of a room edge. No world seed: the maze is fixed. */
@@ -109,8 +133,13 @@ public class BackroomsChunkGenerator extends ChunkGenerator {
 		return h;
 	}
 
+	/** Ceiling-light panels on a 4-block grid, with ~1/4 blown out to leave dark patches. */
 	private static boolean isLight(int worldX, int worldZ) {
-		return Math.floorMod(worldX, LIGHT_SPACING) == 0 && Math.floorMod(worldZ, LIGHT_SPACING) == 0;
+		if (Math.floorMod(worldX, LIGHT_GRID) != LIGHT_OFFSET
+				|| Math.floorMod(worldZ, LIGHT_GRID) != LIGHT_OFFSET) {
+			return false;
+		}
+		return (hash(worldX, worldZ, DIR_LIGHT) & 0x3L) != 0L; // 3 in 4 lit
 	}
 
 	/** The block that belongs at this absolute (x, y, z), or air. Shared by fill + column queries. */

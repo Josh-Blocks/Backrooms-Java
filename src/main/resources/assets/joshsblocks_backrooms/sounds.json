@@ -1,0 +1,8 @@
+{
+	"ambient.hum": {
+		"subtitle": "subtitles.joshsblocks_backrooms.hum",
+		"sounds": [
+			{ "name": "joshsblocks_backrooms:ambient/hum", "stream": false }
+		]
+	}
+}
